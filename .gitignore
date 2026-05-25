@@ -1,0 +1,5 @@
+# 원본 사진은 너무 크니 git에서 제외 (썸네일은 포함)
+photos/full/
+
+# OS
+.DS_Store

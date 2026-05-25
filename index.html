@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#722F37" />
+<title>🍷 Wine Library</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <h1>🍷 Wine Library</h1>
+    <div class="topbar-actions">
+      <button id="statsBtn" class="btn-ghost" title="통계·분석">📊 분석</button>
+      <button id="addBtn" class="btn-primary" title="새 와인 추가">+ 추가</button>
+    </div>
+  </div>
+  <div class="search-row">
+    <input id="search" type="search" placeholder="와인명·생산자·산지·품종·메모…  검색" autocomplete="off" />
+    <button id="filterBtn" class="btn-ghost" aria-label="필터 토글">⚙️</button>
+  </div>
+</header>
+
+<aside id="filterPanel" class="filter-panel hidden">
+  <div class="filter-group">
+    <label>국가</label>
+    <div id="filterCountry" class="chips"></div>
+  </div>
+  <div class="filter-group">
+    <label>빈티지</label>
+    <div class="vintage-range">
+      <input id="vintageMin" type="number" placeholder="최소" min="1900" max="2100" />
+      <span>–</span>
+      <input id="vintageMax" type="number" placeholder="최대" min="1900" max="2100" />
+    </div>
+  </div>
+  <div class="filter-group">
+    <label>평점</label>
+    <div id="filterRating" class="chips">
+      <button data-r="5">★5</button>
+      <button data-r="4">★4+</button>
+      <button data-r="3">★3+</button>
+      <button data-r="">전부</button>
+    </div>
+  </div>
+  <div class="filter-group">
+    <label>출처</label>
+    <div class="chips">
+      <button data-source="wwgc">WWGC</button>
+      <button data-source="photo">사진 보유</button>
+      <button data-source="all" class="active">전체</button>
+    </div>
+  </div>
+  <button id="resetFilters" class="btn-ghost full">초기화</button>
+</aside>
+
+<main>
+  <div class="status-bar">
+    <span id="resultCount">…</span>
+    <select id="sortBy">
+      <option value="date-desc">최신 마신 순</option>
+      <option value="date-asc">오래 마신 순</option>
+      <option value="name-asc">와인명 ↑</option>
+      <option value="vintage-desc">빈티지 ↓</option>
+      <option value="vintage-asc">빈티지 ↑</option>
+      <option value="country-asc">국가 ↑</option>
+    </select>
+  </div>
+
+  <div id="grid" class="grid"></div>
+
+  <div id="empty" class="empty hidden">
+    <p>🔍 결과 없음</p>
+  </div>
+</main>
+
+<!-- 와인 디테일 모달 -->
+<div id="detailModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <button class="close" aria-label="닫기">×</button>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<!-- 와인 추가 모달 -->
+<div id="addModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <button class="close" aria-label="닫기">×</button>
+    <h2>+ 새 와인 추가</h2>
+    <form id="addForm" class="add-form">
+      <label>사진
+        <input type="file" name="photo" accept="image/*" capture="environment" />
+      </label>
+      <div id="photoPreview" class="photo-preview hidden"></div>
+      <div class="row2">
+        <label>촬영일<input type="date" name="date" /></label>
+        <label>빈티지<input type="number" name="vintage" min="1900" max="2100" placeholder="2020" /></label>
+      </div>
+      <label>와인명 *<input type="text" name="name" required placeholder="Château Latour" /></label>
+      <label>생산자<input type="text" name="producer" placeholder="Château Latour" /></label>
+      <div class="row3">
+        <label>국가<input type="text" name="country" placeholder="France" /></label>
+        <label>지방<input type="text" name="region" placeholder="Bordeaux" /></label>
+        <label>세부산지<input type="text" name="subregion" placeholder="Pauillac" /></label>
+      </div>
+      <div class="row2">
+        <label>품종<input type="text" name="varietal" placeholder="Cabernet Sauvignon" /></label>
+        <label>가격대<input type="text" name="price" placeholder="100,000~150,000원" /></label>
+      </div>
+      <div class="row2">
+        <label>마신 장소<input type="text" name="venue" placeholder="레스토랑·집·..." /></label>
+        <label>동반자<input type="text" name="companion" placeholder="..." /></label>
+      </div>
+      <label>평점
+        <div class="star-input" data-name="rating">
+          <button type="button" data-v="1">☆</button>
+          <button type="button" data-v="2">☆</button>
+          <button type="button" data-v="3">☆</button>
+          <button type="button" data-v="4">☆</button>
+          <button type="button" data-v="5">☆</button>
+          <input type="hidden" name="rating" />
+        </div>
+      </label>
+      <label>한줄메모<textarea name="note" rows="3" placeholder="향·맛·페어링·인상…"></textarea></label>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">저장</button>
+        <button type="button" class="btn-ghost" id="downloadJsonBtn">JSON 내보내기</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 통계 모달 -->
+<div id="statsModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content stats-content">
+    <button class="close" aria-label="닫기">×</button>
+    <h2>📊 라이브러리 분석</h2>
+    <div id="statsKpis" class="kpi-grid"></div>
+    <div class="charts-grid">
+      <div class="chart-box">
+        <h3>국가별 와인 수</h3>
+        <canvas id="chartCountry"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>연도별 마신 와인 (촬영일 기준)</h3>
+        <canvas id="chartYear"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>빈티지 분포</h3>
+        <canvas id="chartVintage"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>상위 생산자 (TOP 15)</h3>
+        <canvas id="chartProducer"></canvas>
+      </div>
+      <div class="chart-box wide">
+        <h3>WWGC 행사 타임라인</h3>
+        <canvas id="chartWwgc"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CDN 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exif-js@2.3.0/exif.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/stats.js"></script>
+</body>
+</html>
