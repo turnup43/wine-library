@@ -318,6 +318,14 @@ function openDetail(w) {
     </div>`;
   }
 
+  let wcHTML = '';
+  if (w.wc_journal) {
+    wcHTML = `<div class="detail-section">
+      <h3>📓 Weekly Compass 일지 (${escapeHTML(w.date)})</h3>
+      <p>${escapeHTML(w.wc_journal)}</p>
+    </div>`;
+  }
+
   body.innerHTML = `
     ${photoHTML}
     <h2 class="detail-name">${escapeHTML(w.name)}</h2>
@@ -325,6 +333,7 @@ function openDetail(w) {
     ${metaHTML}
     ${noteHTML}
     ${wwgcHTML}
+    ${wcHTML}
   `;
   m.classList.remove('hidden');
 }
