@@ -1,6 +1,10 @@
 /* Wine Library SPA — vanilla JS */
 
 const LS_KEY = 'wine_library_user_additions_v1';
+const LS_PATCH_KEY = 'wine_library_patches_v1';
+
+// 현재 디테일 모달에서 보고있는 와인
+let CURRENT_WINE = null;
 const FLAG = {
   'France': '🇫🇷', 'Italy': '🇮🇹', 'USA': '🇺🇸', 'Spain': '🇪🇸',
   'Chile': '🇨🇱', 'Australia': '🇦🇺', 'New Zealand': '🇳🇿',
@@ -28,6 +32,13 @@ let STATE = {
   // 사용자 로컬 추가분 머지
   const userWines = JSON.parse(localStorage.getItem(LS_KEY) || '[]')
     .map(w => ({ ...w, source: 'local' }));
+
+  // 사용자 패치 적용 (편집된 와인)
+  const patches = JSON.parse(localStorage.getItem(LS_PATCH_KEY) || '{}');
+  serverWines.forEach(w => {
+    const p = patches[w.filename];
+    if (p) Object.assign(w, p, { _patched: true });
+  });
 
   ALL = [...serverWines, ...userWines];
 
@@ -172,6 +183,28 @@ function bindEvents() {
 
   document.getElementById('addForm').addEventListener('submit', handleAddSubmit);
   document.getElementById('downloadJsonBtn').addEventListener('click', downloadUserJson);
+
+  // 편집 모달
+  document.getElementById('editBtn').addEventListener('click', openEdit);
+  document.getElementById('editForm').addEventListener('submit', handleEditSubmit);
+  document.getElementById('downloadPatchesBtn').addEventListener('click', downloadPatches);
+  document.querySelectorAll('#editForm .star-input button').forEach(b => {
+    b.addEventListener('click', e => {
+      const v = parseInt(e.target.dataset.v);
+      const stars = e.target.parentElement.querySelectorAll('button');
+      stars.forEach((s, i) => s.classList.toggle('on', i < v));
+      e.target.parentElement.querySelector('input').value = v;
+    });
+  });
+
+  // 초기 패치 카운트
+  updatePatchCount();
+}
+
+function updatePatchCount() {
+  const patches = JSON.parse(localStorage.getItem(LS_PATCH_KEY) || '{}');
+  const el = document.getElementById('patchCount');
+  if (el) el.textContent = Object.keys(patches).length;
 }
 
 // ===== FILTER + SORT + RENDER =====
@@ -280,6 +313,7 @@ function renderCard(w) {
 }
 
 function openDetail(w) {
+  CURRENT_WINE = w;
   const m = document.getElementById('detailModal');
   const body = document.getElementById('detailBody');
   const flag = FLAG[w.country] || '';
@@ -424,6 +458,104 @@ function downloadUserJson() {
   a.href = URL.createObjectURL(blob);
   a.download = `user_wines_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
+}
+
+// ===== EDIT MODE =====
+function openEdit() {
+  if (!CURRENT_WINE) return;
+  const w = CURRENT_WINE;
+  // 디테일 모달 닫고 편집 모달 열기
+  document.getElementById('detailModal').classList.add('hidden');
+  const m = document.getElementById('editModal');
+  m.classList.remove('hidden');
+
+  const f = document.getElementById('editForm');
+  f.reset();
+  f.querySelector('[name=filename]').value = w.filename || '';
+  document.getElementById('editFilename').textContent =
+    `${w.filename || '(local)'} · 촬영일 ${w.date || '-'}`;
+
+  // 기존 값 채우기
+  const set = (n, v) => { const el = f.querySelector(`[name=${n}]`); if (el) el.value = v || ''; };
+  set('name', w.name);
+  set('producer', w.producer);
+  set('country', w.country);
+  set('region', w.region);
+  set('subregion', w.subregion);
+  set('vintage', w.vintage);
+  set('varietal', w.varietal);
+  set('venue', w.venue);
+  set('price', w.price);
+  set('companion', w.companion);
+  set('note', w.note);
+
+  // 별점
+  const rating = parseInt(w.rating) || 0;
+  const stars = f.querySelectorAll('.star-input button');
+  stars.forEach((s, i) => s.classList.toggle('on', i < rating));
+  f.querySelector('[name=rating]').value = w.rating || '';
+}
+
+function handleEditSubmit(e) {
+  e.preventDefault();
+  const f = e.target;
+  const fd = new FormData(f);
+  const filename = fd.get('filename');
+  if (!filename) { alert('파일명 누락'); return; }
+
+  // 패치 = 사용자가 입력한 모든 필드 (빈 값도 의도적 삭제로 간주)
+  const patch = {
+    name: fd.get('name'),
+    producer: fd.get('producer'),
+    country: fd.get('country'),
+    region: fd.get('region'),
+    subregion: fd.get('subregion'),
+    vintage: fd.get('vintage'),
+    varietal: fd.get('varietal'),
+    venue: fd.get('venue'),
+    price: fd.get('price'),
+    companion: fd.get('companion'),
+    rating: fd.get('rating'),
+    note: fd.get('note'),
+  };
+
+  const patches = JSON.parse(localStorage.getItem(LS_PATCH_KEY) || '{}');
+  patches[filename] = patch;
+  localStorage.setItem(LS_PATCH_KEY, JSON.stringify(patches));
+
+  // 메모리의 ALL도 즉시 업데이트
+  const idx = ALL.findIndex(w => w.filename === filename);
+  if (idx >= 0) Object.assign(ALL[idx], patch, { _patched: true });
+
+  document.getElementById('editModal').classList.add('hidden');
+  updatePatchCount();
+  applyFilters();  // 화면 즉시 갱신
+  // 토스트
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = `✅ "${patch.name}" 저장됨 (총 ${Object.keys(patches).length}건 변경)`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+function downloadPatches() {
+  const patches = JSON.parse(localStorage.getItem(LS_PATCH_KEY) || '{}');
+  if (!Object.keys(patches).length) {
+    alert('변경사항이 없습니다.');
+    return;
+  }
+  const blob = new Blob([JSON.stringify({
+    _meta: { exported: new Date().toISOString(), count: Object.keys(patches).length },
+    patches: patches,
+  }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `wine_patches_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  if (confirm('다운로드 완료. 브라우저 저장된 패치를 지울까요? (Mac에서 머지 완료 후 OK)')) {
+    localStorage.removeItem(LS_PATCH_KEY);
+    updatePatchCount();
+  }
 }
 
 // ===== UTILS =====

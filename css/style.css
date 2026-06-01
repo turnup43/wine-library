@@ -315,6 +315,32 @@ main { max-width: 1200px; margin: 0 auto; padding: 1rem; }
   max-height: 280px;
 }
 
+/* === EDIT MODE === */
+.detail-actions {
+  margin-top: 1rem;
+  display: flex; gap: 0.5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+.detail-actions button { flex: 1; padding: 0.7rem; }
+.muted-small {
+  font-size: 0.78rem; color: var(--muted);
+  margin: 0 0 0.5rem 0;
+}
+.toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--burgundy); color: white;
+  padding: 0.7rem 1.2rem; border-radius: 999px;
+  font-size: 0.9rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 999;
+  animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp {
+  from { transform: translate(-50%, 20px); opacity: 0; }
+  to   { transform: translate(-50%, 0); opacity: 1; }
+}
+
 /* === MOBILE === */
 @media (max-width: 600px) {
   .topbar h1 { font-size: 1rem; }

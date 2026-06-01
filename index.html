@@ -81,8 +81,63 @@
   <div class="modal-content">
     <button class="close" aria-label="닫기">×</button>
     <div id="detailBody"></div>
+    <div class="detail-actions">
+      <button id="editBtn" class="btn-primary">✏️ 편집</button>
+    </div>
   </div>
 </div>
+
+<!-- 와인 편집 모달 -->
+<div id="editModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <button class="close" aria-label="닫기">×</button>
+    <h2>✏️ 와인 편집</h2>
+    <p id="editFilename" class="muted-small"></p>
+    <form id="editForm" class="add-form">
+      <input type="hidden" name="filename" />
+      <label>와인명 *<input type="text" name="name" required /></label>
+      <label>생산자<input type="text" name="producer" /></label>
+      <div class="row3">
+        <label>국가<input type="text" name="country" list="dl-countries" /></label>
+        <label>지방<input type="text" name="region" /></label>
+        <label>세부산지<input type="text" name="subregion" /></label>
+      </div>
+      <div class="row2">
+        <label>빈티지<input type="number" name="vintage" min="1900" max="2100" /></label>
+        <label>품종<input type="text" name="varietal" /></label>
+      </div>
+      <div class="row2">
+        <label>마신 장소<input type="text" name="venue" /></label>
+        <label>가격대<input type="text" name="price" /></label>
+      </div>
+      <label>동반자<input type="text" name="companion" /></label>
+      <label>평점
+        <div class="star-input" data-name="editRating">
+          <button type="button" data-v="1">☆</button>
+          <button type="button" data-v="2">☆</button>
+          <button type="button" data-v="3">☆</button>
+          <button type="button" data-v="4">☆</button>
+          <button type="button" data-v="5">☆</button>
+          <input type="hidden" name="rating" />
+        </div>
+      </label>
+      <label>한줄메모<textarea name="note" rows="3"></textarea></label>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">💾 저장</button>
+        <button type="button" class="btn-ghost" id="downloadPatchesBtn">📥 변경사항 다운로드 (<span id="patchCount">0</span>)</button>
+      </div>
+      <p class="muted-small">변경사항은 브라우저에 임시 저장됨. JSON을 다운로드해서 manual_overrides 머지 필요.</p>
+    </form>
+  </div>
+</div>
+
+<datalist id="dl-countries">
+  <option value="France"><option value="Italy"><option value="USA"><option value="Spain">
+  <option value="Australia"><option value="New Zealand"><option value="Chile"><option value="Argentina">
+  <option value="Germany"><option value="Portugal"><option value="Austria"><option value="Hungary">
+  <option value="Georgia"><option value="Greece"><option value="South Africa"><option value="Japan">
+  <option value="Korea"><option value="Peru"><option value="Moldova"><option value="Romania">
+</datalist>
 
 <!-- 와인 추가 모달 -->
 <div id="addModal" class="modal hidden" role="dialog" aria-modal="true">
