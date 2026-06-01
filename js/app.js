@@ -362,10 +362,12 @@ function openDetail(w) {
   }
 
   let wcHTML = '';
-  if (w.wc_journal) {
+  if (w.wc_weekly_meetings || w.wc_journal) {
     wcHTML = `<div class="detail-section">
-      <h3>📓 Weekly Compass 일지 (${escapeHTML(w.date)})</h3>
-      <p>${escapeHTML(w.wc_journal)}</p>
+      <h3>📓 Weekly Compass (${escapeHTML(w.date)})</h3>
+      ${w.wc_weekly_meetings ? `<p><strong>그 주 만남(Links):</strong><br>${escapeHTML(w.wc_weekly_meetings)}</p>` : ''}
+      ${w.wc_journal ? `<p><strong>일지:</strong><br>${escapeHTML(w.wc_journal)}</p>` : ''}
+      <p class="hint">💡 동반자가 정확하지 않으면 ✏️ 편집으로 실제 마신 사람만 남기세요.</p>
     </div>`;
   }
 
