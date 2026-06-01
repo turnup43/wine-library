@@ -287,22 +287,31 @@ function openDetail(w) {
     ? `<img class="detail-photo" src="${escapeAttr(w.thumb)}" alt="${escapeAttr(w.name)}" />`
     : '';
 
-  const metaPairs = [
+  // 핵심 정보 (있을 때만 표시 — 와인 식별 메타)
+  const corePairs = [
     ['빈티지', w.vintage],
     ['생산자', w.producer],
     ['국가', w.country && `${flag} ${w.country}`],
     ['지방', w.region],
     ['세부산지', w.subregion],
     ['품종', w.varietal],
-    ['마신 날짜', w.date],
-    ['장소', w.venue],
-    ['동반자', w.companion],
-    ['평점', w.rating ? '★'.repeat(parseInt(w.rating)) : ''],
-    ['가격대', w.price],
   ].filter(([k, v]) => v);
 
+  // 경험 정보 (항상 표시 — 비어있어도 '—' 로 자리 유지)
+  const experiencePairs = [
+    ['마신 날짜', w.date || '—'],
+    ['마신 장소', w.venue || '—'],
+    ['동반자', w.companion || '—'],
+    ['평점', w.rating ? '★'.repeat(parseInt(w.rating)) : '—'],
+    ['가격대', w.price || '—'],
+  ];
+
   const metaHTML = `<dl class="detail-meta">` +
-    metaPairs.map(([k, v]) => `<dt>${escapeHTML(k)}</dt><dd>${escapeHTML(v)}</dd>`).join('') +
+    corePairs.map(([k, v]) => `<dt>${escapeHTML(k)}</dt><dd>${escapeHTML(v)}</dd>`).join('') +
+    `</dl>` +
+    `<dl class="detail-meta detail-experience">` +
+    experiencePairs.map(([k, v]) =>
+      `<dt>${escapeHTML(k)}</dt><dd${v === '—' ? ' class="empty"' : ''}>${escapeHTML(v)}</dd>`).join('') +
     `</dl>`;
 
   const noteHTML = w.note ? `<div class="detail-section"><h3>한줄 메모</h3><p>${escapeHTML(w.note)}</p></div>` : '';

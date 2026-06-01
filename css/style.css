@@ -220,6 +220,12 @@ main { max-width: 1200px; margin: 0 auto; padding: 1rem; }
 }
 .detail-meta dt { font-weight: 600; color: var(--burgundy); }
 .detail-meta dd { margin: 0; }
+.detail-meta dd.empty { color: var(--border); font-style: italic; }
+.detail-experience {
+  background: transparent;
+  border: 1px dashed var(--border);
+  margin-top: 0.5rem;
+}
 .detail-section { margin: 1rem 0; }
 .detail-section h3 {
   font-size: 0.9rem; color: var(--burgundy);
